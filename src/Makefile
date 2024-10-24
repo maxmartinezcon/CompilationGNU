@@ -24,18 +24,60 @@
 include sources.mk
 
 # Platform Overrides
-PLATFORM = 
+PLATFORM = $(PLATFORM)
+CFLAGS = -Wall -Werror -g -O0 -std=c99 
+CPPFLAGS = $(INCLUDES)
+LDFLAGS = -Map=c1m2.map
 
-# Architectures Specific Flags
-LINKER_FILE = 
-CPU = 
-ARCH = 
-SPECS = 
+ifeq ($(PLATFORM), HOST)
+	CC = gcc
+	LD = gcc
+	CFLAGS += -DHOST
 
-# Compiler Flags and Defines
-CC = 
-LD = 
-LDFLAGS = 
-CFLAGS = 
-CPPFLAGs = 
+else ifeq ($(PLATFORM), MSP432)
+	# Architectures Specific Flags
+	LINKER_FILE = -T ../include/msp432p401r.lds
+	CPU = -mcpu=cortex-m4
+	ARCH = -mthumb
+	SPECS = --specs=nosys.specs
 
+	# Compiler Flags and Defines
+	CC = arm-none-eabi-gcc
+	LD = arm-none-eabi-gcc
+	LDFLAGS = $(LINKER_FILE) -lm
+	CFLAGS += $(CPU) $(ARCH) -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 --specs=nosys.specs -DMSP432
+	CPPFLAGS += $(INCLUDES)
+
+else 
+	$(error Unknow patform specified.)
+
+endif
+
+# Reglas de preprocesado, ensamblador y objeto
+%.i: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -E $< -o $@
+
+%.asm: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -S $< -o $@
+
+%.o: %.c
+	$(CC) $(CPPFLAGS) $(CFLAGS) -c $< -o $@
+
+# Regla para generar ensamblador del ejecutable
+%.asm: %.out
+	objdump -d $< > $@
+
+
+# Compilar todo sin enlazar
+.PHONY: compile-all
+compile-all: $(SOURCES:.c=.o)
+
+# Compilar y enlazar todo
+.PHONY: build
+build: $(SOURCES:.c=.o)
+	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o c1m2.out $(SOURCES:.c=.o)
+
+# Limpiar
+.PHONY: clean
+clean:
+	rm -f *.o *.i *.asm c1m2.out c1m2.map
