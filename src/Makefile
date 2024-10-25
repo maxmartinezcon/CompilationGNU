@@ -24,7 +24,6 @@
 include sources.mk
 
 # Platform Overrides
-PLATFORM = $(PLATFORM)
 CFLAGS = -Wall -Werror -g -O0 -std=c99 
 CPPFLAGS = $(INCLUDES)
 LDFLAGS = -Map=c1m2.map
@@ -36,7 +35,7 @@ ifeq ($(PLATFORM), HOST)
 
 else ifeq ($(PLATFORM), MSP432)
 	# Architectures Specific Flags
-	LINKER_FILE = -T ../include/msp432p401r.lds
+	LINKER_FILE = -T ../msp432p401r.lds
 	CPU = -mcpu=cortex-m4
 	ARCH = -mthumb
 	SPECS = --specs=nosys.specs
@@ -74,8 +73,9 @@ compile-all: $(SOURCES:.c=.o)
 
 # Compilar y enlazar todo
 .PHONY: build
-build: $(SOURCES:.c=.o)
-	$(CC) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -o c1m2.out $(SOURCES:.c=.o)
+build: compile-all
+	@echo "Linking with files: $(SOURCES:.c=.o)"
+	$(LD) $(LDFLAGS) -o c1m2.out $(SOURCES:.c=.o)
 
 # Limpiar
 .PHONY: clean
