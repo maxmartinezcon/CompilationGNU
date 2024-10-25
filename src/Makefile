@@ -44,8 +44,8 @@ else ifeq ($(PLATFORM), MSP432)
 	# Compiler Flags and Defines
 	CC = arm-none-eabi-gcc
 	LD = arm-none-eabi-gcc
-	LDFLAGS = $(LINKER_FILE) -mfloat-abi=soft
-	CFLAGS += $(CPU) $(ARCH) -march=armv7e-m -mfloat-abi=soft --specs=nosys.specs -DMSP432
+	LDFLAGS = $(LINKER_FILE) -mfloat-abi=soft -Wl,-Map=c1m2.map
+	CFLAGS += $(CPU) $(ARCH) -march=armv7e-m -mfloat-abi=soft --specs=nosys.specs -DMSP432 -MMD -MP
 	CPPFLAGS += $(INCLUDES)
 
 else 
@@ -68,16 +68,23 @@ endif
 	objdump -d $< > $@
 
 
+.PHONY: generate-preprocessed
+generate-preprocessed: $(SOURCES:.c=.i)
+
 # Compilar todo sin enlazar
 .PHONY: compile-all
 compile-all: $(SOURCES:.c=.o)
 
 # Compilar y enlazar todo
 .PHONY: build
-build: compile-all
+build: generate-preprocessed compile-all
 	$(LD) $(LDFLAGS) -o c1m2.out $(SOURCES:.c=.o)
 
 # Limpiar
 .PHONY: clean
 clean:
-	rm -f *.o *.i *.asm c1m2.out c1m2.map
+	rm -f *.o *.i *.asm *.d c1m2.out c1m2.map
+
+-include $(SOURCES:.c=.d)
+
+
