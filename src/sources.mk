@@ -12,6 +12,9 @@
 # Add your Source files to this variable
 SOURCES = memory.c 
 SOURCES += main.c
+SOURCES += syscalls.c
+
+TARGET = c1m2.out
 
 ifeq ($(PLATFORM), MSP432)
     SOURCES += interrupts_msp432p401r_gcc.c \

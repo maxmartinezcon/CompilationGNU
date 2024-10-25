@@ -26,9 +26,10 @@ include sources.mk
 # Platform Overrides
 CFLAGS = -Wall -Werror -g -O0 -std=c99 
 CPPFLAGS = $(INCLUDES)
-LDFLAGS = -Map=c1m2.map
+
 
 ifeq ($(PLATFORM), HOST)
+	LDFLAGS = -o $(TARGET) -lm
 	CC = gcc
 	LD = gcc
 	CFLAGS += -DHOST
@@ -43,8 +44,8 @@ else ifeq ($(PLATFORM), MSP432)
 	# Compiler Flags and Defines
 	CC = arm-none-eabi-gcc
 	LD = arm-none-eabi-gcc
-	LDFLAGS = $(LINKER_FILE) -lm
-	CFLAGS += $(CPU) $(ARCH) -march=armv7e-m -mfloat-abi=hard -mfpu=fpv4-sp-d16 --specs=nosys.specs -DMSP432
+	LDFLAGS = $(LINKER_FILE) -mfloat-abi=soft
+	CFLAGS += $(CPU) $(ARCH) -march=armv7e-m -mfloat-abi=soft --specs=nosys.specs -DMSP432
 	CPPFLAGS += $(INCLUDES)
 
 else 
@@ -74,7 +75,6 @@ compile-all: $(SOURCES:.c=.o)
 # Compilar y enlazar todo
 .PHONY: build
 build: compile-all
-	@echo "Linking with files: $(SOURCES:.c=.o)"
 	$(LD) $(LDFLAGS) -o c1m2.out $(SOURCES:.c=.o)
 
 # Limpiar
